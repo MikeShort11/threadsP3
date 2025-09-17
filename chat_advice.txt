@@ -1,0 +1,67 @@
+High-Level Flow
+
+Parse command-line arguments
+
+Check if at least one number is passed.
+
+If not, print the usage message and exit.
+
+Convert each argument to an integer.
+
+Set up data for threads
+
+Create a struct to hold:
+
+The number to factor.
+
+An array to store factors.
+
+A count of how many factors were found.
+
+Allocate an array of these structs (one per input number).
+
+Create child threads
+
+Use pthread_t array (one per number).
+
+Call pthread_create in a loop, passing:
+
+The function that does factorization.
+
+A pointer to that number’s struct.
+
+Wait for child threads to finish
+
+Use pthread_join in a loop, in the same order you created the threads.
+
+Each pthread_join ensures that thread is done before you use its results.
+
+Since you passed the struct pointer in, the results are already stored in that struct — no need to return values through pthread_exit unless you want to.
+
+Display results
+
+After each pthread_join, print:
+
+The original number.
+
+The list of factors stored in the struct.
+
+This way, you maintain the same order as the input.
+
+Cleanup
+
+You don’t need pthread_detach because you’re joining all threads.
+
+Free any dynamically allocated memory (if you used malloc).
+
+Where pthread functions go
+
+pthread_create → Inside a loop over command-line numbers. Creates one thread per number.
+
+pthread_join → After creating all threads, in another loop over the thread IDs. Ensures results are ready before printing.
+
+pthread_exit → (Optional) inside the child thread function, but not required if you just return NULL;.
+
+pthread_t → Store one per thread (likely in an array).
+
+Data passing → You pass a struct * to the child thread through the void * argument in pthread_create.
