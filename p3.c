@@ -3,49 +3,60 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-
-int trial_division_helper(int dividend){
-	for (int divisor = 2; divisor <= sqrt(dividend); divisor++){
-		if ((dividend % divisor) == 0){
-			return divisor;
-		}
-	}
-	return 0;
+int trial_division_helper(int dividend) {
+    int limit = sqrt(dividend);
+    for (int divisor = 2; divisor <= limit; divisor++) {
+        if ((dividend % divisor) == 0) {
+            return divisor;
+        }
+    }
+    return 0;
 }
 
 void* trial_division(void* arg) {
-	int number = *(int*)arg;
-	int* result = (int *)malloc(10*sizeof(int)); //no need for realloc, max factors is ten
-	int factor_counter = 0;
-	int factor = trial_division_helper(number);
-	if (factor != 0) {
-		result[factor_counter] = factor;
-		factor_counter++;
-		trial_division_helper(number / factor);
-	} else {
-		return result;
-	}
+    int number = *(int*)arg;
+    int* result = malloc(10 * sizeof(int)); // max 10 factors
+    int factor_counter = 0;
+    int factor;
+
+    while ((factor = trial_division_helper(number)) != 0) {
+        result[factor_counter++] = factor;
+        number /= factor;
+    }
+    if (number > 1) {
+        result[factor_counter++] = number;
+    }
+    result[factor_counter] = 0;
+    return result;
 }
 
+int main() {
+    int arr[25];
+    for (int i = 0; i < 25; i++) {
+        scanf("%d", &arr[i]);
+    }
 
-int main(){
-	//create the array
-	int *arr[25]:
-	scanf("%d", &arr[i]);
-	length = sizeof(arr) / sizeof(arr[0]);
-	//create threads based on the size of the array
-	pthread_t *threads = malloc(length * sizeof(pthread_t));
-	int *ids = malloc(length * sizeof(int));
-	
+    int length = sizeof(arr) / sizeof(arr[0]);
+    pthread_t* threads = malloc(length * sizeof(pthread_t));
 
-	for (int i=0; i < length; i++){
-		ids[i] = i;
-		pthread_create(&threads[i], NULL, trial_division, arr[i]);
-	}
-	for (int i = 0; i < n; i++) {
-		pthread_join(threads[i], NULL);
-	}
-	free(threads);
-	free(ids);
-	return 0;
+    for (int i = 0; i < length; i++) {
+        pthread_create(&threads[i], NULL, trial_division, &arr[i]);
+    }
+
+    for (int i = 0; i < length; i++) {
+        int* factors;
+        pthread_join(threads[i], (void**)&factors);
+
+        printf("Factors of %d: ", arr[i]);
+        for (int j = 0; factors[j] != 0; j++) {
+            printf("%d ", factors[j]);
+        }
+        printf("\n");
+
+        free(factors);
+    }
+
+    free(threads);
+    return 0;
 }
+
